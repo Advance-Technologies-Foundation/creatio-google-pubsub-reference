@@ -19,6 +19,9 @@ namespace AtfGooglePubSubReference.EntryPoints.WebServices {
 		[DataMember(Name = "googlePubSubStopped")]
 		public bool GooglePubSubStopped { get; set; }
 
+		[DataMember(Name = "googlePubSubStopTimedOut")]
+		public bool GooglePubSubStopTimedOut { get; set; }
+
 		[DataMember(Name = "packageVersion")]
 		public string PackageVersion { get; set; }
 
@@ -29,23 +32,62 @@ namespace AtfGooglePubSubReference.EntryPoints.WebServices {
 	[ServiceContract]
 	[AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Required)]
 	public sealed class NativeIntegrationMaintenanceService : BaseService, IReadOnlySessionState {
+		private readonly Func<bool> _canManageSolution;
+		private readonly Func<GooglePubSubRuntimeStopResult> _stopSubscriber;
+		private readonly Action _stopPackagePublisher;
+		private readonly Action<int> _setStatusCode;
+
+		public NativeIntegrationMaintenanceService() {
+			_canManageSolution = () => PrivilegedOperationAuthorization.CanManageSolution(
+				operation => UserConnection.DBSecurityEngine.GetCanExecuteOperation(operation));
+			_stopSubscriber = GooglePubSubSubscriberRuntime.Stop;
+			_stopPackagePublisher = GooglePubSubPackagePublisher.Stop;
+			_setStatusCode = SetStatusCode;
+		}
+
+		internal NativeIntegrationMaintenanceService(Func<bool> canManageSolution,
+				Func<GooglePubSubRuntimeStopResult> stopSubscriber, Action stopPackagePublisher,
+				Action<int> setStatusCode) {
+			_canManageSolution = canManageSolution;
+			_stopSubscriber = stopSubscriber;
+			_stopPackagePublisher = stopPackagePublisher;
+			_setStatusCode = setStatusCode;
+		}
 
 		[OperationContract]
 		[WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Json,
 			ResponseFormat = WebMessageFormat.Json, BodyStyle = WebMessageBodyStyle.Bare)]
 		public StopNativeIntegrationsResponse Stop() {
 			try {
-				GooglePubSubSubscriberRuntime.Stop();
-				GooglePubSubPackagePublisher.Stop();
-				SetStatusCode(200);
+				if (!_canManageSolution()) {
+					_setStatusCode(403);
+					return new StopNativeIntegrationsResponse {
+						Success = false,
+						Error = Constants.PrivilegedOperationRequiredError,
+						PackageVersion = Constants.PackageVersion
+					};
+				}
+				GooglePubSubRuntimeStopResult stopResult = _stopSubscriber();
+				_stopPackagePublisher();
+				if (stopResult.TimedOut) {
+					_setStatusCode(503);
+					return new StopNativeIntegrationsResponse {
+						Success = false,
+						GooglePubSubStopped = false,
+						GooglePubSubStopTimedOut = true,
+						PackageVersion = Constants.PackageVersion,
+						Error = "Google Pub/Sub subscriber did not stop before the timeout."
+					};
+				}
+				_setStatusCode(200);
 				return new StopNativeIntegrationsResponse {
-					Success = true,
-					GooglePubSubStopped = true,
+					Success = stopResult.Stopped,
+					GooglePubSubStopped = stopResult.Stopped,
 					PackageVersion = Constants.PackageVersion
 				};
 			} catch (Exception exception) {
 				LogManager.GetLogger(Constants.LoggerName).Error("Google Pub/Sub shutdown request failed.", exception);
-				SetStatusCode(500);
+				_setStatusCode(500);
 				return new StopNativeIntegrationsResponse {
 					Success = false,
 					Error = "Google Pub/Sub shutdown failed. See the Creatio application log for details."

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Common.Logging;
 using Google.Api.Gax.Grpc;
 using Google.Api.Gax;
@@ -40,34 +41,125 @@ namespace AtfGooglePubSubReference.GooglePubSub {
 		}
 	}
 
+	internal sealed class GooglePubSubRuntimeStopResult {
+		internal bool WasRunning { get; set; }
+		internal bool Stopped { get; set; }
+		internal bool TimedOut { get; set; }
+	}
+
+	internal interface IGooglePubSubRuntimeThread {
+		bool IsAlive { get; }
+		void Start();
+		bool Join(TimeSpan timeout);
+	}
+
+	internal sealed class GooglePubSubRuntimeThread : IGooglePubSubRuntimeThread {
+		private readonly Thread _thread;
+
+		internal GooglePubSubRuntimeThread(ThreadStart start) {
+			_thread = new Thread(start) {
+				IsBackground = true,
+				Name = "ATF.GooglePubSubReference"
+			};
+		}
+
+		public bool IsAlive => _thread.IsAlive;
+		public void Start() => _thread.Start();
+		public bool Join(TimeSpan timeout) => _thread.Join(timeout);
+	}
+
+	internal sealed class GooglePubSubRuntimeLifecycle {
+		private readonly object _syncRoot = new object();
+		private CancellationTokenSource _cancellation;
+		private IGooglePubSubRuntimeThread _thread;
+
+		internal bool TryStart(Func<CancellationToken, IGooglePubSubRuntimeThread> threadFactory) {
+			lock (_syncRoot) {
+				if (_thread != null) {
+					if (_thread.IsAlive) {
+						return false;
+					}
+					ClearState();
+				}
+				var cancellation = new CancellationTokenSource();
+				IGooglePubSubRuntimeThread thread = threadFactory(cancellation.Token);
+				_cancellation = cancellation;
+				_thread = thread;
+				try {
+					thread.Start();
+					return true;
+				} catch {
+					ClearState();
+					throw;
+				}
+			}
+		}
+
+		internal GooglePubSubRuntimeStopResult Stop(TimeSpan timeout) {
+			IGooglePubSubRuntimeThread thread;
+			lock (_syncRoot) {
+				if (_thread == null) {
+					return new GooglePubSubRuntimeStopResult { Stopped = true };
+				}
+				_cancellation.Cancel();
+				thread = _thread;
+			}
+			if (!thread.Join(timeout)) {
+				return new GooglePubSubRuntimeStopResult {
+					WasRunning = true,
+					TimedOut = true
+				};
+			}
+			lock (_syncRoot) {
+				if (ReferenceEquals(_thread, thread)) {
+					ClearState();
+				}
+			}
+			return new GooglePubSubRuntimeStopResult {
+				WasRunning = true,
+				Stopped = true
+			};
+		}
+
+		private void ClearState() {
+			_cancellation?.Dispose();
+			_cancellation = null;
+			_thread = null;
+		}
+	}
+
+	internal interface IGooglePubSubReplyPublisher {
+		Task PublishAsync(PubsubMessage message);
+		Task ShutdownAsync(TimeSpan timeout);
+	}
+
+	internal sealed class GooglePubSubReplyPublisher : IGooglePubSubReplyPublisher {
+		private readonly PublisherClient _publisher;
+
+		internal GooglePubSubReplyPublisher(PublisherClient publisher) {
+			_publisher = publisher;
+		}
+
+		public Task PublishAsync(PubsubMessage message) => _publisher.PublishAsync(message);
+		public Task ShutdownAsync(TimeSpan timeout) => _publisher.ShutdownAsync(timeout);
+	}
+
 	internal static class GooglePubSubSubscriberRuntime {
-		private static readonly object SyncRoot = new object();
-		private static CancellationTokenSource _cancellation;
-		private static Thread _thread;
+		private static readonly GooglePubSubRuntimeLifecycle Lifecycle = new GooglePubSubRuntimeLifecycle();
 
 		internal static int NormalizeWorkerCount(int value) {
 			return Math.Max(1, Math.Min(32, value));
 		}
 
 		internal static void Start() {
-			lock (SyncRoot) {
-				if (_thread != null && _thread.IsAlive) {
-					return;
-				}
-				UserConnection userConnection = ClassFactory.Get<UserConnection>();
-				GooglePubSubSubscriberSettings settings = GooglePubSubSubscriberSettings.Load(userConnection);
-				ILog log = LogManager.GetLogger(Constants.LoggerName);
-				if (!settings.IsConfigured) {
-					log.Warn("Google Pub/Sub subscriber is disabled because its system settings are incomplete.");
-					return;
-				}
-				_cancellation = new CancellationTokenSource();
-				_thread = new Thread(() => Run(settings, log, _cancellation.Token)) {
-					IsBackground = true,
-					Name = "ATF.GooglePubSubReference"
-				};
-				_thread.Start();
+			UserConnection userConnection = ClassFactory.Get<UserConnection>();
+			GooglePubSubSubscriberSettings settings = GooglePubSubSubscriberSettings.Load(userConnection);
+			ILog log = LogManager.GetLogger(Constants.LoggerName);
+			if (!settings.IsConfigured) {
+				log.Warn("Google Pub/Sub subscriber is disabled because its system settings are incomplete.");
+				return;
 			}
+			Lifecycle.TryStart(token => new GooglePubSubRuntimeThread(() => Run(settings, log, token)));
 		}
 
 		private static string GetCurrentContactName(UserConnection userConnection) {
@@ -77,28 +169,18 @@ namespace AtfGooglePubSubReference.GooglePubSub {
 			return contact?.GetTypedColumnValue<string>(Constants.NameColumnName) ?? string.Empty;
 		}
 
-		internal static void Stop() {
-			Thread thread;
-			lock (SyncRoot) {
-				if (_thread == null) {
-					return;
-				}
-				_cancellation.Cancel();
-				thread = _thread;
-			}
-			if (!thread.Join(TimeSpan.FromSeconds(20))) {
+		internal static GooglePubSubRuntimeStopResult Stop() {
+			GooglePubSubRuntimeStopResult result = Lifecycle.Stop(TimeSpan.FromSeconds(20));
+			if (result.TimedOut) {
 				LogManager.GetLogger(Constants.LoggerName).Warn(
 					"Google Pub/Sub streaming subscriber did not stop within 20 seconds.");
 			}
-			lock (SyncRoot) {
-				_cancellation.Dispose();
-				_cancellation = null;
-				_thread = null;
-			}
+			return result;
 		}
 
 		private static void Run(GooglePubSubSubscriberSettings settings, ILog log,
 				CancellationToken cancellationToken) {
+			IGooglePubSubReplyPublisher publisher = null;
 			try {
 				GoogleGrpcPackageNativeLibraryLoader.Load();
 				GoogleCredential credential = CreateCredential(settings.CredentialBase64);
@@ -114,7 +196,7 @@ namespace AtfGooglePubSubReference.GooglePubSub {
 						FlowControlSettings = new FlowControlSettings(settings.WorkerCount, null)
 					}
 				}.Build();
-				PublisherClient publisher = new PublisherClientBuilder {
+				PublisherClient publisherClient = new PublisherClientBuilder {
 					GoogleCredential = credential,
 					GrpcAdapter = GrpcCoreAdapter.Instance,
 					TopicName = replyTopicName,
@@ -123,6 +205,7 @@ namespace AtfGooglePubSubReference.GooglePubSub {
 						BatchingSettings = new BatchingSettings(100, 1_000_000, TimeSpan.FromMilliseconds(10))
 					}
 				}.Build();
+				publisher = new GooglePubSubReplyPublisher(publisherClient);
 				log.InfoFormat("Google Pub/Sub streaming subscriber started with {0} clients. Subscription: {1}; " +
 					"reply topic: {2}", settings.WorkerCount, settings.RequestSubscription, settings.ReplyTopic);
 				System.Threading.Tasks.Task runTask = subscriber.StartAsync(async (message, token) => {
@@ -144,10 +227,27 @@ namespace AtfGooglePubSubReference.GooglePubSub {
 				log.Info("Google Pub/Sub streaming subscriber stopped.");
 			} catch (Exception exception) {
 				log.Error("Google Pub/Sub subscriber terminated unexpectedly.", exception);
+			} finally {
+				ShutdownReplyPublisher(publisher,
+					exception => log.Error("Google Pub/Sub reply publisher shutdown failed.", exception));
 			}
 		}
 
-		private static async System.Threading.Tasks.Task<bool> ProcessMessage(PublisherClient publisher,
+		internal static bool ShutdownReplyPublisher(IGooglePubSubReplyPublisher publisher,
+				Action<Exception> reportError) {
+			if (publisher == null) {
+				return true;
+			}
+			try {
+				publisher.ShutdownAsync(TimeSpan.FromSeconds(15)).ConfigureAwait(false).GetAwaiter().GetResult();
+				return true;
+			} catch (Exception exception) {
+				reportError(exception);
+				return false;
+			}
+		}
+
+		private static async Task<bool> ProcessMessage(IGooglePubSubReplyPublisher publisher,
 				PubsubMessage message, CancellationToken cancellationToken) {
 			string contactName = GetCurrentContactName(ClassFactory.Get<UserConnection>());
 			if (!GooglePubSubRoundTripHandler.TryCreateReply(message, contactName,

@@ -10,6 +10,7 @@ The reference contains:
 - bounded subscriber and publisher client concurrency;
 - versioned, self-provisioned `Grpc.Core` native runtimes;
 - a graceful maintenance endpoint;
+- explicit `CanManageSolution` authorization for both package web services;
 - unit tests, an explicit live E2E test, and a standalone round-trip/load console.
 
 ## Architecture

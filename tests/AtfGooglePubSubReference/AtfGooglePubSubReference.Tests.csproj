@@ -7,6 +7,11 @@
     <IsPackable>false</IsPackable>
     <RootNamespace>AtfGooglePubSubReference.Tests</RootNamespace>
     <Configurations>Debug;Release;dev-n8;dev-nf</Configurations>
+    <AutoGenerateBindingRedirects Condition="'$(TargetFramework)' == 'net472'">true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType Condition="'$(TargetFramework)' == 'net472'">true</GenerateBindingRedirectsOutputType>
+    <AppConfig Condition="'$(TargetFramework)' == 'net472'">App.net472.config</AppConfig>
+    <TestCoreLibPath Condition="'$(CoreTargetFramework)' == 'net472'">../../.application/net-framework/core-bin</TestCoreLibPath>
+    <TestCoreLibPath Condition="'$(CoreTargetFramework)' != 'net472'">../../.application/net-core/core-bin</TestCoreLibPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="7.2.0" />
@@ -15,8 +20,27 @@
     <PackageReference Include="NUnit3TestAdapter" Version="6.1.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+	<Reference Include="System.Web" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Terrasoft.Core">
+      <HintPath>$(TestCoreLibPath)/Terrasoft.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Terrasoft.Web.Common">
+      <HintPath>$(TestCoreLibPath)/Terrasoft.Web.Common.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging">
+      <HintPath>$(TestCoreLibPath)/Common.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging.Core">
+      <HintPath>$(TestCoreLibPath)/Common.Logging.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\packages\AtfGooglePubSubReference\Files\AtfGooglePubSubReference.csproj" />

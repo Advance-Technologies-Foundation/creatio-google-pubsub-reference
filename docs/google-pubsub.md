@@ -30,11 +30,15 @@ The response preserves the same `correlationId`. The subscriber reads the curren
 
 It reads project, request-topic, and secure credential settings from Creatio and publishes with `PublisherServiceApiClient`. A successful request returns HTTP 202 and the Google message ID. Validation returns HTTP 400; Google/configuration failures return HTTP 502.
 
+The endpoint requires the caller to hold Creatio's `CanManageSolution` operation. Authorization is evaluated before request validation, system-setting access, or Google publishing. Denied requests return HTTP 403 with a stable error and perform no side effects.
+
 ## Maintenance endpoint
 
 `POST /rest/NativeIntegrationMaintenanceService/Stop` stops the streaming subscriber and shuts down default publisher channels. This is useful for graceful application shutdown and diagnostics.
 
-It does not unload `grpc_csharp_ext` from the worker process. A native-runtime replacement still requires the worker process to terminate; see [native runtime lifecycle](native-runtime.md).
+This endpoint also requires `CanManageSolution`. If the subscriber thread does not join within 20 seconds, the endpoint returns HTTP 503, reports `googlePubSubStopped: false` and `googlePubSubStopTimedOut: true`, and preserves runtime state so another subscriber cannot start alongside it. A later stop can complete cleanup after the original thread exits.
+
+The subscriber-owned long-lived reply publisher is shut down in the runtime thread's `finally` path. This still does not unload `grpc_csharp_ext` from the worker process. A native-runtime replacement requires the worker process to terminate; see [native runtime lifecycle](native-runtime.md).
 
 ## Credentials and settings
 

@@ -19,5 +19,8 @@ namespace AtfGooglePubSubReference {
 		internal const string ReplyTopicSettingCode = "GooglePubSubReplyTopic";
 		internal const string WorkerCountSettingCode = "GooglePubSubWorkerCount";
 		internal const string CredentialSettingCode = "GooglePubSubServiceAccountJsonBase64";
+		internal const string ManageSolutionOperationName = "CanManageSolution";
+		internal const string PrivilegedOperationRequiredError =
+			"Operation requires the CanManageSolution permission.";
 	}
 }
