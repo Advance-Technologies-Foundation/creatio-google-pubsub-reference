@@ -1,0 +1,33 @@
+<Project>
+    <ItemGroup Condition="'$(PkgPath)' != ''">
+        <Compile Remove="$(PkgPath)/AtfGooglePubSubReference/Assemblies/**" />
+        <Compile Remove="$(PkgPath)/AtfGooglePubSubReference/Data/**" />
+        <Compile Remove="$(PkgPath)/AtfGooglePubSubReference/SqlScripts/**" />
+        <Compile Remove="$(PkgPath)/AtfGooglePubSubReference/Schemas\**" />
+        <Compile Remove="$(PkgPath)/AtfGooglePubSubReference/Resources/**" />
+        <EmbeddedResource Remove="$(PkgPath)/AtfGooglePubSubReference/Assemblies/**" />
+        <EmbeddedResource Remove="$(PkgPath)/AtfGooglePubSubReference/Data/**" />
+        <EmbeddedResource Remove="$(PkgPath)/AtfGooglePubSubReference/SqlScripts/**" />
+        <EmbeddedResource Remove="$(PkgPath)/AtfGooglePubSubReference/Schemas/**" />
+        <EmbeddedResource Remove="$(PkgPath)/AtfGooglePubSubReference/Resources/**" />
+        <None Remove="$(PkgPath)/AtfGooglePubSubReference/Assemblies/**" />
+        <None Remove="$(PkgPath)/AtfGooglePubSubReference/Data/**" />
+        <None Remove="$(PkgPath)/AtfGooglePubSubReference/SqlScripts/**" />
+        <None Remove="$(PkgPath)/AtfGooglePubSubReference/Schemas/**" />
+        <None Remove="$(PkgPath)/AtfGooglePubSubReference/Resources/**" />
+    </ItemGroup>
+	<Target Name="PackageGoogleGrpcNativeAssets" AfterTargets="Build">
+		<PropertyGroup>
+			<GoogleGrpcArtifactDirectory>$(OutputPath)native-artifacts</GoogleGrpcArtifactDirectory>
+			<GoogleGrpcArtifactPath>$(GoogleGrpcArtifactDirectory)\grpc-core-2.46.6-runtimes.zip</GoogleGrpcArtifactPath>
+		</PropertyGroup>
+		<ItemGroup>
+			<GoogleGrpcNativeAsset Include="$(PkgGrpc_Core)\runtimes\**\*" />
+			<GoogleGrpcLooseRuntimeAsset Include="@(GoogleGrpcNativeAsset-&gt;'$(OutputPath)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
+			<GoogleGrpcLooseRootAsset Include="$(OutputPath)grpc_csharp_ext*.dll;$(OutputPath)libgrpc_csharp_ext*.so;$(OutputPath)libgrpc_csharp_ext*.dylib" />
+		</ItemGroup>
+		<MakeDir Directories="$(GoogleGrpcArtifactDirectory)" />
+		<ZipDirectory SourceDirectory="$(PkgGrpc_Core)\runtimes" DestinationFile="$(GoogleGrpcArtifactPath)" Overwrite="true" />
+		<Delete Files="@(GoogleGrpcLooseRuntimeAsset);@(GoogleGrpcLooseRootAsset)" />
+	</Target>
+</Project>

@@ -1,0 +1,137 @@
+{
+  "Descriptor": {
+    "UId": "ca61695e-56bf-4826-8a3e-ad95c7006a91",
+    "Name": "GooglePubSubSysSettingsValues",
+    "ModifiedOnUtc": "/Date(1784019869851)/",
+    "InstallType": 0,
+    "Schema": {
+      "UId": "951b2bbb-0ba3-4049-9a29-b5d4c0b6d50f",
+      "Name": "SysSettingsValue"
+    },
+    "Columns": [
+      {
+        "ColumnUId": "ffd545dd-d2de-40d7-8b07-20654613bb20",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "BinaryValue",
+        "DataTypeValueUId": "fa6e6e49-b996-475e-a77e-73904e4c5a88"
+      },
+      {
+        "ColumnUId": "297f4697-d071-4be2-8509-9090c07dfe18",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "BooleanValue",
+        "DataTypeValueUId": "90b65bf8-0ffc-4141-8779-2420877af907"
+      },
+      {
+        "ColumnUId": "ebf6bb93-8aa6-4a01-900d-c6ea67affe21",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "CreatedBy",
+        "DataTypeValueUId": "b295071f-7ea9-4e62-8d1a-919bf3732ff2",
+        "ReferenceSchemaName": "Contact"
+      },
+      {
+        "ColumnUId": "e80190a5-03b2-4095-90f7-a193a960adee",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "CreatedOn",
+        "DataTypeValueUId": "d21e9ef4-c064-4012-b286-fa1a8171da44"
+      },
+      {
+        "ColumnUId": "34f73492-296e-4a73-95f7-e7de5a3b3509",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "DateTimeValue",
+        "DataTypeValueUId": "d21e9ef4-c064-4012-b286-fa1a8171da44"
+      },
+      {
+        "ColumnUId": "b1ffd2d8-2bd3-4c46-b9c0-782afb0996c0",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "FloatValue",
+        "DataTypeValueUId": "ecbcce18-2a17-4ead-829a-9d02fa9578a4"
+      },
+      {
+        "ColumnUId": "23c7dde8-7cf5-4f18-9d76-0fa4179ee931",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "GuidValue",
+        "DataTypeValueUId": "23018567-a13c-4320-8687-fd6f9e3699bd"
+      },
+      {
+        "ColumnUId": "ae0e45ca-c495-4fe7-a39d-3ab7278e1617",
+        "IsForceUpdate": false,
+        "IsKey": true,
+        "ColumnName": "Id",
+        "DataTypeValueUId": "23018567-a13c-4320-8687-fd6f9e3699bd"
+      },
+      {
+        "ColumnUId": "b36bfa07-34c7-45b1-a2ee-39e653034ba0",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "IntegerValue",
+        "DataTypeValueUId": "6b6b74e2-820d-490e-a017-2b73d4ccf2b0"
+      },
+      {
+        "ColumnUId": "55472376-a4dd-40da-86c6-975ce4b898fa",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "IsDef",
+        "DataTypeValueUId": "90b65bf8-0ffc-4141-8779-2420877af907"
+      },
+      {
+        "ColumnUId": "3015559e-cbc6-406a-88af-07f7930be832",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "ModifiedBy",
+        "DataTypeValueUId": "b295071f-7ea9-4e62-8d1a-919bf3732ff2",
+        "ReferenceSchemaName": "Contact"
+      },
+      {
+        "ColumnUId": "9928edec-4272-425a-93bb-48743fee4b04",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "ModifiedOn",
+        "DataTypeValueUId": "d21e9ef4-c064-4012-b286-fa1a8171da44"
+      },
+      {
+        "ColumnUId": "f1bc0b27-2c46-4cae-ad23-3b8940587d4f",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "Position",
+        "DataTypeValueUId": "6b6b74e2-820d-490e-a017-2b73d4ccf2b0"
+      },
+      {
+        "ColumnUId": "3fabd836-6a53-4d8d-9069-6df88d9dae1e",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "ProcessListeners",
+        "DataTypeValueUId": "6b6b74e2-820d-490e-a017-2b73d4ccf2b0"
+      },
+      {
+        "ColumnUId": "8f1984bb-7bef-4220-9b49-9a12d0ebcd68",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "SysAdminUnit",
+        "DataTypeValueUId": "b295071f-7ea9-4e62-8d1a-919bf3732ff2",
+        "ReferenceSchemaName": "SysAdminUnit"
+      },
+      {
+        "ColumnUId": "0fde6f1e-22c5-48c7-9c89-6f0031e270de",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "SysSettings",
+        "DataTypeValueUId": "b295071f-7ea9-4e62-8d1a-919bf3732ff2",
+        "ReferenceSchemaName": "SysSettings"
+      },
+      {
+        "ColumnUId": "af6013ce-7387-4619-b4f4-30c4276fcfac",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "TextValue",
+        "DataTypeValueUId": "c0f04627-4620-4bc0-84e5-9419dc8516b1"
+      }
+    ]
+  }
+}

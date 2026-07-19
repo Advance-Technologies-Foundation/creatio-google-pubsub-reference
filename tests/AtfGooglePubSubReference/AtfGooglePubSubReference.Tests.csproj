@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\.build-props\env.$(Configuration).props" Condition="Exists('..\..\.build-props\env.$(Configuration).props')" />
+  <PropertyGroup>
+    <TargetFramework Condition="'$(CoreTargetFramework)' == 'net472'">net472</TargetFramework>
+    <TargetFramework Condition="'$(CoreTargetFramework)' != 'net472'">net8.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>AtfGooglePubSubReference.Tests</RootNamespace>
+    <Configurations>Debug;Release;dev-n8;dev-nf</Configurations>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="7.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="NUnit" Version="4.4.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.1.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\packages\AtfGooglePubSubReference\Files\AtfGooglePubSubReference.csproj" />
+  </ItemGroup>
+</Project>

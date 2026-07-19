@@ -1,0 +1,21 @@
+{
+  "Name": "ATF Google Pub/Sub Reference",
+  "Description": "Reference implementation for Google Pub/Sub integration with Creatio.",
+  "Maintainer": "Advance Technologies Foundation",
+  "Icon": "",
+  "IconName": "",
+  "Color": "#4285F4",
+  "Version": "1.0.0",
+  "RequiredPlatformVersion": "8.3.3",
+  "MarketplaceLink": "",
+  "HelpLink": "",
+  "OrderLink": "",
+  "SupportEmail": "",
+  "Code": "AtfGooglePubSubReference",
+  "Packages": [
+    {
+      "UId": "399057c1-32ad-4031-b1cc-66de48aa1949",
+      "Name": "AtfGooglePubSubReference"
+    }
+  ]
+}

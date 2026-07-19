@@ -1,0 +1,12 @@
+<Project>
+	<ItemGroup Label="Google Pub/Sub dependencies">
+		<PackageReference Include="Google.Cloud.PubSub.V1" Version="3.36.0" />
+		<PackageReference Include="Grpc.Core" Version="2.46.6" GeneratePathProperty="true" />
+		<PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" ExcludeAssets="runtime" />
+		<PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.5" ExcludeAssets="runtime" />
+	</ItemGroup>
+	<ItemGroup Label="Native artifact framework references" Condition="'$(TargetFramework)' == 'net472'">
+		<Reference Include="System.IO.Compression" />
+		<Reference Include="System.IO.Compression.FileSystem" />
+	</ItemGroup>
+</Project>

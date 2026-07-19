@@ -1,0 +1,20 @@
+{
+  "Descriptor": {
+    "UId": "399057c1-32ad-4031-b1cc-66de48aa1949",
+		"PackageVersion": "1.0.0",
+    "Name": "AtfGooglePubSubReference",
+    "Type": 1,
+    "ProjectPath": "Files/AtfGooglePubSubReference.csproj",
+    "ModifiedOnUtc": "/Date(1783970404000)/",
+    "Maintainer": "Advance Technologies Foundation",
+    "InstallBehavior": 1,
+    "DependsOn": [
+      {
+        "UId": "3a71e376-9ac3-3049-c62b-9c43b9abe054",
+        "PackageVersion": "7.8.0",
+        "Name": "CrtCoreBase",
+        "Type": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="dev-n8" />
+    <BuildType Name="dev-nf" />
+  </Configurations>
+  <Project Path="packages\AtfGooglePubSubReference\Files\AtfGooglePubSubReference.csproj" />
+  <Project Path="tests\AtfGooglePubSubReference\AtfGooglePubSubReference.Tests.csproj" />
+  <Project Path="tests\AtfGooglePubSubReference.E2E\AtfGooglePubSubReference.E2E.csproj" />
+  <Project Path="tools\GooglePubSubRoundTrip.Console\GooglePubSubRoundTrip.Console.csproj" />
+</Solution>
